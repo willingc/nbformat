@@ -12,14 +12,15 @@ helpers to build the structs in the right form.
 from ..notebooknode import NotebookNode
 
 # Change this when incrementing the nbformat version
-nbformat = 4
-nbformat_minor = 2
-nbformat_schema = 'nbformat.v4.schema.json'
+nbformat = 5
+nbformat_minor = 0
+nbformat_schema = "nbformat.v5.schema.json"
 
 
 def validate(node, ref=None):
-    """validate a v4 node"""
+    """validate a v5 node"""
     from .. import validate
+
     return validate(node, ref=ref, version=nbformat)
 
 
@@ -28,17 +29,17 @@ def new_output(output_type, data=None, **kwargs):
     output = NotebookNode(output_type=output_type)
 
     # populate defaults:
-    if output_type == 'stream':
-        output.name = u'stdout'
-        output.text = u''
-    elif output_type == 'display_data':
+    if output_type == "stream":
+        output.name = u"stdout"
+        output.text = u""
+    elif output_type == "display_data":
         output.metadata = NotebookNode()
         output.data = NotebookNode()
-    elif output_type == 'execute_result':
+    elif output_type == "execute_result":
         output.metadata = NotebookNode()
         output.data = NotebookNode()
         output.execution_count = None
-    elif output_type == 'error':
+    elif output_type == "error":
         output.ename = "NotImplementedError"
         output.evalue = ""
         output.traceback = []
@@ -66,39 +67,39 @@ def output_from_msg(msg):
     ValueError: if the message is not an output message.
 
     """
-    msg_type = msg['header']['msg_type']
-    content = msg['content']
+    msg_type = msg["header"]["msg_type"]
+    content = msg["content"]
 
-    if msg_type == 'execute_result':
-        return new_output(output_type=msg_type,
-            metadata=content['metadata'],
-            data=content['data'],
-            execution_count=content['execution_count'],
+    if msg_type == "execute_result":
+        return new_output(
+            output_type=msg_type,
+            metadata=content["metadata"],
+            data=content["data"],
+            execution_count=content["execution_count"],
         )
-    elif msg_type == 'stream':
-        return new_output(output_type=msg_type,
-            name=content['name'],
-            text=content['text'],
+    elif msg_type == "stream":
+        return new_output(
+            output_type=msg_type, name=content["name"], text=content["text"]
         )
-    elif msg_type == 'display_data':
-        return new_output(output_type=msg_type,
-            metadata=content['metadata'],
-            data=content['data'],
+    elif msg_type == "display_data":
+        return new_output(
+            output_type=msg_type, metadata=content["metadata"], data=content["data"]
         )
-    elif msg_type == 'error':
-        return new_output(output_type=msg_type,
-            ename=content['ename'],
-            evalue=content['evalue'],
-            traceback=content['traceback'],
+    elif msg_type == "error":
+        return new_output(
+            output_type=msg_type,
+            ename=content["ename"],
+            evalue=content["evalue"],
+            traceback=content["traceback"],
         )
     else:
         raise ValueError("Unrecognized output msg type: %r" % msg_type)
 
 
-def new_code_cell(source='', **kwargs):
+def new_code_cell(source="", **kwargs):
     """Create a new code cell"""
     cell = NotebookNode(
-        cell_type='code',
+        cell_type="code",
         metadata=NotebookNode(),
         execution_count=None,
         source=source,
@@ -106,32 +107,42 @@ def new_code_cell(source='', **kwargs):
     )
     cell.update(kwargs)
 
-    validate(cell, 'code_cell')
+    validate(cell, "code_cell")
     return cell
 
-def new_markdown_cell(source='', **kwargs):
+
+def new_rich_cell(source="", **kwargs):
+    """Create a new rich cell"""
+    cell = NotebookNode(
+        cell_type="rich",
+        metadata=NotebookNode(),
+        execution_count=None,
+        source=source,
+        outputs=[],
+    )
+    cell.update(kwargs)
+
+    validate(cell, "rich_cell")
+    return cell
+
+
+def new_markdown_cell(source="", **kwargs):
     """Create a new markdown cell"""
-    cell = NotebookNode(
-        cell_type='markdown',
-        source=source,
-        metadata=NotebookNode(),
-    )
+    cell = NotebookNode(cell_type="markdown", source=source, metadata=NotebookNode())
     cell.update(kwargs)
 
-    validate(cell, 'markdown_cell')
+    validate(cell, "markdown_cell")
     return cell
 
-def new_raw_cell(source='', **kwargs):
+
+def new_raw_cell(source="", **kwargs):
     """Create a new raw cell"""
-    cell = NotebookNode(
-        cell_type='raw',
-        source=source,
-        metadata=NotebookNode(),
-    )
+    cell = NotebookNode(cell_type="raw", source=source, metadata=NotebookNode())
     cell.update(kwargs)
 
-    validate(cell, 'raw_cell')
+    validate(cell, "raw_cell")
     return cell
+
 
 def new_notebook(**kwargs):
     """Create a new notebook"""
